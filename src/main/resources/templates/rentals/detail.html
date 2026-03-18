@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/base :: head('Rental Detail')}"></head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/base :: sidebar('rentals')}"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" th:text="'Rental #' + ${rental.id}">Rental</div>
+      <a th:href="@{/rentals}" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+    <div class="page-content">
+      <div th:if="${successMsg}" class="alert alert-success" th:text="${successMsg}"></div>
+      <div th:if="${errorMsg}" class="alert alert-danger" th:text="${errorMsg}"></div>
+
+      <div class="detail-grid">
+        <!-- Left column -->
+        <div>
+          <!-- Rental Info -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <span class="card-title">Rental Info</span>
+              <span th:class="'badge badge-' + ${rental.status.name().toLowerCase()}" th:text="${rental.status}"></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Customer</span>
+              <span class="detail-value" th:text="${rental.user.firstName + ' ' + rental.user.lastName}"></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Dates</span>
+              <span class="detail-value" th:text="${rental.rentalDate + ' → ' + rental.returnDate}"></span>
+            </div>
+            <div class="detail-row" th:if="${rental.actualReturnDate != null}">
+              <span class="detail-label">Returned</span>
+              <span class="detail-value" th:text="${rental.actualReturnDate}"></span>
+            </div>
+            <div class="detail-row" th:if="${rental.notes != null and !#strings.isEmpty(rental.notes)}">
+              <span class="detail-label">Notes</span>
+              <span class="detail-value" th:text="${rental.notes}"></span>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="card mb-4">
+            <div class="card-header"><span class="card-title">Items</span></div>
+            <table>
+              <thead>
+                <tr><th>Item</th><th>Qty</th><th>Rate/Day</th><th>Damage Fee</th></tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${rental.rentalItems}">
+                  <td th:text="${item.product.name}"></td>
+                  <td th:text="${item.quantity}"></td>
+                  <td th:text="'Tk ' + ${item.dailyRateAtRental}"></td>
+                  <td th:text="${item.damageFee != null and item.damageFee.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'Tk ' + item.damageFee : '—'}"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Payment History -->
+          <div class="card" th:if="${!#lists.isEmpty(payments)}">
+            <div class="card-header"><span class="card-title">Payment History</span></div>
+            <table>
+              <thead>
+                <tr><th>Type</th><th>Amount</th><th>Reference</th><th>Date</th></tr>
+              </thead>
+              <tbody>
+                <tr th:each="p : ${payments}">
+                  <td><span th:class="'badge badge-' + ${p.type.toLowerCase()}" th:text="${p.type}"></span></td>
+                  <td th:text="'Tk ' + ${#numbers.formatDecimal(p.amount, 1, 2)}"></td>
+                  <td th:text="${p.reference}" class="text-muted text-sm"></td>
+                  <td th:text="${p.paidAt != null ? #temporals.format(p.paidAt, 'dd MMM yyyy') : '—'}" class="text-muted text-sm"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <!-- Bill summary -->
+          <div class="card mb-4">
+            <div class="card-header"><span class="card-title">Bill</span></div>
+            <div class="detail-row">
+              <span class="detail-label">Total</span>
+              <span class="detail-value fw-600" th:text="'Tk ' + ${#numbers.formatDecimal(rental.totalAmount != null ? rental.totalAmount : 0, 1, 2)}"></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Advance Paid</span>
+              <span th:if="${rental.advancePaymentDone}" class="detail-value" style="color:#16a34a;"
+                    th:text="'Tk ' + ${#numbers.formatDecimal(rental.advancePaid, 1, 2)}"></span>
+              <span th:unless="${rental.advancePaymentDone}" class="badge badge-pending">Unpaid</span>
+            </div>
+            <div class="detail-row" th:if="${rental.damageFee != null and rental.damageFee.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+              <span class="detail-label">Damage Fee</span>
+              <span class="detail-value" style="color:#dc2626;" th:text="'Tk ' + ${#numbers.formatDecimal(rental.damageFee, 1, 2)}"></span>
+            </div>
+            <div class="detail-row" style="border-top:2px solid #e5e7eb;margin-top:4px;padding-top:8px;">
+              <span class="detail-label fw-600">Balance Due</span>
+              <span class="detail-value fw-600" style="color:#2563eb;"
+                    th:text="'Tk ' + ${#numbers.formatDecimal(rental.balanceDue, 1, 2)}"></span>
+            </div>
+            <div class="detail-row" th:if="${rental.balancePaymentDone}">
+              <span class="badge badge-active" style="margin-top:4px;">✓ Fully Settled</span>
+            </div>
+          </div>
+
+          <!-- Buyer: Pay Advance -->
+          <div class="card mb-4" sec:authorize="hasRole('BUYER')"
+               th:if="${!rental.advancePaymentDone and rental.status.name() != 'CANCELLED'}">
+            <div class="card-header"><span class="card-title">Pay Advance</span></div>
+            <p class="text-muted text-sm" style="margin-bottom:10px;">
+              Min 20% = <strong>Tk <span th:text="${#numbers.formatDecimal(rental.minimumAdvance, 1, 2)}"></span></strong>
+            </p>
+            <form th:action="@{/rentals/{id}/pay-advance(id=${rental.id})}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <div class="form-group">
+                <input type="number" name="amount" class="form-control"
+                       th:min="${rental.minimumAdvance}" th:max="${rental.totalAmount}"
+                       th:placeholder="'Min Tk ' + ${#numbers.formatDecimal(rental.minimumAdvance, 1, 2)}"
+                       step="0.01" required>
+              </div>
+              <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;">Pay Advance (Demo)</button>
+            </form>
+          </div>
+
+          <!-- Buyer: Advance paid, waiting -->
+          <div class="card mb-4" sec:authorize="hasRole('BUYER')"
+               th:if="${rental.advancePaymentDone and !rental.balancePaymentDone and rental.status.name() != 'COMPLETED'}">
+            <div class="alert alert-success" style="margin:0;">
+              ✓ Advance paid — waiting for seller to confirm.
+            </div>
+          </div>
+
+          <!-- Buyer: Pay Balance -->
+          <div class="card mb-4" sec:authorize="hasRole('BUYER')"
+               th:if="${rental.advancePaymentDone and !rental.balancePaymentDone and rental.status.name() == 'COMPLETED'}">
+            <div class="card-header"><span class="card-title">Pay Balance</span></div>
+            <div style="background:#f9fafb;border-radius:6px;padding:10px;margin-bottom:12px;font-size:13px;">
+              <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                <span>Total</span><span>Tk <span th:text="${#numbers.formatDecimal(rental.totalAmount,1,2)}"></span></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;color:#16a34a;">
+                <span>Advance paid</span><span>- Tk <span th:text="${#numbers.formatDecimal(rental.advancePaid,1,2)}"></span></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;color:#dc2626;"
+                   th:if="${rental.damageFee != null and rental.damageFee.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                <span>Damage</span><span>+ Tk <span th:text="${#numbers.formatDecimal(rental.damageFee,1,2)}"></span></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid #e5e7eb;font-weight:700;color:#2563eb;">
+                <span>Balance Due</span><span>Tk <span th:text="${#numbers.formatDecimal(rental.balanceDue,1,2)}"></span></span>
+              </div>
+            </div>
+            <form th:action="@{/rentals/{id}/pay-balance(id=${rental.id})}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;">
+                Pay Tk <span th:text="${#numbers.formatDecimal(rental.balanceDue,1,2)}"></span> (Demo)
+              </button>
+            </form>
+          </div>
+
+          <!-- Seller/Admin Actions -->
+          <div class="card" sec:authorize="hasAnyRole('SELLER','ADMIN')">
+            <div class="card-header"><span class="card-title">Actions</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div th:if="${rental.status.name() == 'PENDING' and !rental.advancePaymentDone}"
+                   class="alert alert-warning" style="font-size:12px;margin:0;">Waiting for buyer advance payment.</div>
+
+              <form th:if="${rental.status.name() == 'PENDING' and rental.advancePaymentDone}"
+                    th:action="@{/rentals/{id}/confirm(id=${rental.id})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;">Confirm</button>
+              </form>
+
+              <form th:if="${rental.status.name() == 'CONFIRMED'}"
+                    th:action="@{/rentals/{id}/activate(id=${rental.id})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Activate</button>
+              </form>
+
+              <a th:if="${rental.status.name() == 'ACTIVE'}"
+                 th:href="@{/rentals/{id}/return(id=${rental.id})}"
+                 class="btn btn-warning" style="text-align:center;">Process Return</a>
+
+              <form th:if="${rental.status.name() == 'PENDING' or rental.status.name() == 'CONFIRMED'}"
+                    th:action="@{/rentals/{id}/cancel(id=${rental.id})}" method="post"
+                    onsubmit="return confirm('Cancel this rental?')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">Cancel</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Buyer cancel -->
+          <div class="card mt-4" sec:authorize="hasRole('BUYER')" th:if="${rental.status.name() == 'PENDING'}">
+            <form th:action="@{/rentals/{id}/cancel(id=${rental.id})}" method="post" onsubmit="return confirm('Cancel?')">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">Cancel Rental</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
