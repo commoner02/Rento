@@ -1,0 +1,28 @@
+target/
+*.class
+*.jar
+*.war
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+logs/
+
+# Spring Boot
+spring-shell.log
