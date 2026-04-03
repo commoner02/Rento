@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Dashboard')}"></head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/base :: sidebar('dashboard')}"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">My Dashboard</div>
+      <a th:href="@{/rentals/new}" class="btn btn-primary btn-sm">+ New Rental</a>
+    </div>
+    <div class="page-content">
+      <div th:if="${successMsg}" class="alert alert-success" th:text="${successMsg}"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">My Rentals</div>
+          <div class="stat-value" th:text="${myRentals.size()}">0</div>
+          <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Available Products</div>
+          <div class="stat-value" th:text="${availableProducts.size()}">0</div>
+          <div class="stat-icon">📦</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">My Rentals</span>
+          <a th:href="@{/rentals}" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Dates</th><th>Total</th><th>Advance</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="r : ${myRentals}">
+                <td th:text="'#' + ${r.id}"></td>
+                <td th:text="${r.rentalDate + ' → ' + r.returnDate}"></td>
+                <td th:text="'Tk ' + ${#numbers.formatDecimal(r.totalAmount != null ? r.totalAmount : 0, 1, 2)}"></td>
+                <td>
+                  <span th:if="${r.advancePaymentDone}" style="color:#16a34a;">Tk <span th:text="${#numbers.formatDecimal(r.advancePaid,1,2)}"></span></span>
+                  <span th:unless="${r.advancePaymentDone}" class="text-muted text-sm">—</span>
+                </td>
+                <td><span th:class="'badge badge-' + ${r.status.name().toLowerCase()}" th:text="${r.status}"></span></td>
+                <td><a th:href="@{/rentals/{id}(id=${r.id})}" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(myRentals)}">
+                <td colspan="6" style="text-align:center;color:#6b7280;padding:32px;">
+                  No rentals yet. <a th:href="@{/rentals/new}">Create your first →</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
