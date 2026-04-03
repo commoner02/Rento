@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/base :: head('Revenue')}"></head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/base :: sidebar('payments')}"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Revenue Overview</div>
+      <div class="badge badge-confirmed" style="font-size:14px;padding:6px 14px;">
+        Total: Tk <span th:text="${totalRevenue}"></span>
+      </div>
+    </div>
+    <div class="page-content">
+      <div th:if="${successMsg}" class="alert alert-success" th:text="${successMsg}"></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Completed Rentals</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Rental ID</th><th>Customer</th><th>Return Date</th><th>Total</th><th>Deposit</th><th>Payment</th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${completedRentals}">
+                <td><a th:href="@{/rentals/{id}(id=${r.id})}" th:text="'#' + ${r.id}"></a></td>
+                <td th:text="${r.user.firstName + ' ' + r.user.lastName}"></td>
+                <td th:text="${r.actualReturnDate}"></td>
+                <td th:text="'Tk ' + ${r.totalAmount != null ? #numbers.formatDecimal(r.totalAmount,1,2) : '0.00'}"></td>
+                <td th:text="'Tk ' + ${r.advancePaid != null ? #numbers.formatDecimal(r.advancePaid,1,2) : '0.00'}"></td>
+                <td>
+                  <span th:if="${r.advancePaymentDone}" class="badge badge-active">Paid</span>
+                  <span th:unless="${r.advancePaymentDone}" class="badge badge-pending">Unpaid</span>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(completedRentals)}">
+                <td colspan="6" style="text-align:center;color:#6b7280;padding:32px;">No completed rentals yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

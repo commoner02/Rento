@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/base :: head('Dashboard')}"></head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/base :: sidebar('dashboard')}"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Admin Dashboard</div>
+      <span class="badge badge-admin">Admin</span>
+    </div>
+    <div class="page-content">
+      <div th:if="${successMsg}" class="alert alert-success" th:text="${successMsg}"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value" th:text="${totalUsers}">0</div>
+          <div class="stat-icon">👤</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Products</div>
+          <div class="stat-value" th:text="${totalProducts}">0</div>
+          <div class="stat-icon">📦</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Rentals</div>
+          <div class="stat-value" th:text="${totalRentals}">0</div>
+          <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Revenue (Tk)</div>
+          <div class="stat-value" th:text="${totalRevenue}">0</div>
+          <div class="stat-icon">💰</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Rentals</span>
+          <a th:href="@{/rentals}" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Customer</th><th>Rental Date</th><th>Return Date</th><th>Amount</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${recentRentals}">
+                <td th:text="'#' + ${r.id}"></td>
+                <td th:text="${r.user.firstName + ' ' + r.user.lastName}"></td>
+                <td th:text="${r.rentalDate}"></td>
+                <td th:text="${r.returnDate}"></td>
+                <td th:text="'Tk ' + ${r.totalAmount != null ? #numbers.formatDecimal(r.totalAmount,1,2) : '0.00'}"></td>
+                <td><span th:class="'badge badge-' + ${r.status.name().toLowerCase()}" th:text="${r.status}"></span></td>
+                <td><a th:href="@{/rentals/{id}(id=${r.id})}" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(recentRentals)}">
+                <td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No rentals yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

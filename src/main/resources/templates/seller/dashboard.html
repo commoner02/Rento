@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Dashboard')}"></head>
+<body>
+<div class="layout">
+  <div th:replace="~{fragments/base :: sidebar('dashboard')}"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Seller Dashboard</div>
+      <a th:href="@{/rentals}" class="btn btn-outline btn-sm">All Rentals</a>
+    </div>
+    <div class="page-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" th:text="${pendingRentals.size()}">0</div>
+          <div class="stat-icon">⏳</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active</div>
+          <div class="stat-value" th:text="${activeRentals.size()}">0</div>
+          <div class="stat-icon">🟢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Overdue</div>
+          <div class="stat-value" th:text="${overdueRentals.size()}" style="color:#ef4444;">0</div>
+          <div class="stat-icon">⚠️</div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><span class="card-title">Pending Confirmation</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Customer</th><th>Dates</th><th>Total</th><th>Advance</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="r : ${pendingRentals}">
+                <td th:text="'#' + ${r.id}"></td>
+                <td th:text="${r.user.firstName + ' ' + r.user.lastName}"></td>
+                <td th:text="${r.rentalDate + ' → ' + r.returnDate}"></td>
+                <td th:text="'Tk ' + ${#numbers.formatDecimal(r.totalAmount,1,2)}"></td>
+                <td>
+                  <span th:if="${r.advancePaymentDone}" style="color:#16a34a;">✓ Paid</span>
+                  <span th:unless="${r.advancePaymentDone}" class="text-muted text-sm">Waiting</span>
+                </td>
+                <td><a th:href="@{/rentals/{id}(id=${r.id})}" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(pendingRentals)}">
+                <td colspan="6" style="text-align:center;color:#6b7280;padding:24px;">No pending rentals.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Active Rentals</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Customer</th><th>Return Date</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="r : ${activeRentals}">
+                <td th:text="'#' + ${r.id}"></td>
+                <td th:text="${r.user.firstName + ' ' + r.user.lastName}"></td>
+                <td th:text="${r.returnDate}"></td>
+                <td>
+                  <a th:href="@{/rentals/{id}(id=${r.id})}" class="btn btn-outline btn-sm">View</a>
+                  <a th:href="@{/rentals/{id}/return(id=${r.id})}" class="btn btn-warning btn-sm">Return</a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(activeRentals)}">
+                <td colspan="4" style="text-align:center;color:#6b7280;padding:24px;">No active rentals.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
