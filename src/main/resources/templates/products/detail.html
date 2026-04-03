@@ -3,64 +3,74 @@
 <head th:replace="~{fragments/base :: head('Product Detail')}"></head>
 <body>
 <div class="layout">
-  <div th:replace="~{fragments/base :: sidebar('products')}"></div>
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-title" th:text="${product.name}">Product</div>
-      <div class="topbar-actions">
-        <a th:href="@{/products/edit/{id}(id=${product.id})}" sec:authorize="hasRole('ADMIN')" class="btn btn-outline btn-sm">Edit</a>
-        <a th:href="@{/products}" class="btn btn-outline btn-sm">← Back</a>
-      </div>
-    </div>
-    <div class="page-content">
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;max-width:800px;">
-        <div class="card" style="display:flex;align-items:center;justify-content:center;font-size:80px;min-height:200px;">
-          <span th:switch="${product.category.name()}">
-            <span th:case="'CHAIR'">🪑</span>
-            <span th:case="'TABLE'">🪞</span>
-            <span th:case="'CANOPY'">⛺</span>
-            <span th:case="'LINEN'">🪢</span>
-            <span th:case="'LIGHTING'">💡</span>
-            <span th:case="'AUDIO'">🔊</span>
-            <span th:case="*">📦</span>
-          </span>
+    <div th:replace="~{fragments/base :: sidebar('products')}"></div>
+    <div class="main-content">
+        <div class="topbar">
+            <div class="topbar-title" th:text="${product.name}">Product</div>
+            <div class="topbar-actions">
+                <a th:href="@{/products/edit/{id}(id=${product.id})}" sec:authorize="hasRole('ADMIN')" class="btn btn-outline btn-sm">Edit</a>
+                <a th:href="@{/products}" class="btn btn-outline btn-sm">← Back</a>
+            </div>
         </div>
-        <div class="card">
-          <div style="margin-bottom:8px;">
-            <span class="badge badge-confirmed" th:text="${product.category}" style="margin-bottom:8px;"></span>
-          </div>
-          <h2 style="font-size:22px;font-weight:700;margin-bottom:8px;" th:text="${product.name}"></h2>
-          <p class="text-muted" th:if="${product.description}" th:text="${product.description}" style="margin-bottom:16px;"></p>
+        <div class="page-content">
+            <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;max-width:800px;">
+                <!-- Image/Icon Container -->
+                <div class="card" style="display:flex;align-items:center;justify-content:center;min-height:200px;padding:20px;">
+                    <img th:if="${product.imageUrl != null and product.imageUrl != ''}"
+                         th:src="${product.imageUrl}"
+                         alt="Product Image"
+                         style="max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;">
+                    <div th:unless="${product.imageUrl != null and product.imageUrl != ''}"
+                         style="font-size:80px;text-align:center;">
+            <span th:switch="${product.category.name()}">
+              <span th:case="'CHAIR'">🪑</span>
+              <span th:case="'TABLE'">🪞</span>
+              <span th:case="'CANOPY'">⛺</span>
+              <span th:case="'LINEN'">🪢</span>
+              <span th:case="'LIGHTING'">💡</span>
+              <span th:case="'AUDIO'">🔊</span>
+              <span th:case="*">📦</span>
+            </span>
+                    </div>
+                </div>
 
-          <div class="detail-row">
-            <span class="detail-label">Daily Rate</span>
-            <span class="detail-value" style="color:#2563eb;font-size:18px;font-weight:700;" th:text="'৳' + ${product.dailyRate} + ' / day'"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Replacement Value</span>
-            <span class="detail-value" th:text="'৳' + ${product.replacementValue}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Deposit (20%)</span>
-            <span class="detail-value" th:text="'৳' + ${product.replacementValue != null ? #numbers.formatDecimal(product.replacementValue * 0.20, 1, 2) : 'N/A'}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Total Quantity</span>
-            <span class="detail-value" th:text="${product.totalQuantity}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Available Now</span>
-            <span class="detail-value" th:text="${product.availableQuantity}"
-                  th:style="${product.availableQuantity > 0} ? 'color:#10b981' : 'color:#ef4444'"></span>
-          </div>
+                <!-- Product Details Container -->
+                <div class="card">
+                    <div style="margin-bottom:8px;">
+                        <span class="badge badge-confirmed" th:text="${product.category}" style="margin-bottom:8px;"></span>
+                    </div>
+                    <h2 style="font-size:22px;font-weight:700;margin-bottom:8px;" th:text="${product.name}"></h2>
+                    <p class="text-muted" th:if="${product.description}" th:text="${product.description}" style="margin-bottom:16px;"></p>
 
-          <div style="margin-top:16px;" sec:authorize="hasRole('BUYER')">
-            <a th:href="@{/rentals/new}" class="btn btn-primary">Rent Now</a>
-          </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Daily Rate</span>
+                        <span class="detail-value" style="color:#2563eb;font-size:18px;font-weight:700;" th:text="'৳' + ${product.dailyRate} + ' / day'"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Replacement Value</span>
+                        <span class="detail-value" th:text="'৳' + ${product.replacementValue}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Deposit (20%)</span>
+                        <span class="detail-value" th:text="${product.replacementValue != null ? #numbers.formatDecimal(product.replacementValue * 0.20, 1, 2) : 'N/A'}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Quantity</span>
+                        <span class="detail-value" th:text="${product.totalQuantity}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Available Now</span>
+                        <span class="detail-value" th:text="${product.availableQuantity}"
+                              th:style="${product.availableQuantity > 0} ? 'color:#10b981' : 'color:#ef4444'"></span>
+                    </div>
+
+                    <div style="margin-top:16px;" sec:authorize="hasRole('BUYER')">
+                        <a th:href="@{/rentals/new}" class="btn btn-primary">Rent Now</a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 </body>
 </html>
